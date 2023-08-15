@@ -20,7 +20,7 @@ if (!isset($_SESSION['Admin-name'])) {
     </script>   
     <script type="text/javascript" src="js/bootbox.min.js"></script>
     <script type="text/javascript" src="js/bootstrap.js"></script>
-    <script src="js/user_log.js"></script>
+ <!--   <script src="js/user_log.js"></script> --> 
     <script>
       $(window).on("load resize ", function() {
         var scrollWidth = $('.tbl-content').width() - $('.tbl-content table').width();

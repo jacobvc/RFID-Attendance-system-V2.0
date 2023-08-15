@@ -29,7 +29,7 @@ session_start();
 
         if (isset($_POST['log_date'])) {
           //Start date filter
-          if ($_POST['date_sel_start'] != 0) {
+          if ($_POST['date_sel_start']) {
               $Start_date = $_POST['date_sel_start'];
               $_SESSION['searchQuery'] = "checkindate='".$Start_date."'";
           }
@@ -38,22 +38,22 @@ session_start();
               $_SESSION['searchQuery'] = "checkindate='".date("Y-m-d")."'";
           }
           //End date filter
-          if ($_POST['date_sel_end'] != 0) {
+          if ($_POST['date_sel_end']) {
               $End_date = $_POST['date_sel_end'];
               $_SESSION['searchQuery'] = "checkindate BETWEEN '".$Start_date."' AND '".$End_date."'";
           }
           //Time-In filter
           if ($_POST['time_sel'] == "Time_in") {
             //Start time filter
-            if ($_POST['time_sel_start'] != 0 && $_POST['time_sel_end'] == 0) {
+            if ($_POST['time_sel_start'] && $_POST['time_sel_end']) {
                 $Start_time = $_POST['time_sel_start'];
                 $_SESSION['searchQuery'] .= " AND timein='".$Start_time."'";
             }
-            elseif ($_POST['time_sel_start'] != 0 && $_POST['time_sel_end'] != 0) {
+            elseif ($_POST['time_sel_start'] && $_POST['time_sel_end']) {
                 $Start_time = $_POST['time_sel_start'];
             }
             //End time filter
-            if ($_POST['time_sel_end'] != 0) {
+            if ($_POST['time_sel_end']) {
                 $End_time = $_POST['time_sel_end'];
                 $_SESSION['searchQuery'] .= " AND timein BETWEEN '".$Start_time."' AND '".$End_time."'";
             }
@@ -61,15 +61,15 @@ session_start();
           //Time-out filter
           if ($_POST['time_sel'] == "Time_out") {
             //Start time filter
-            if ($_POST['time_sel_start'] != 0 && $_POST['time_sel_end'] == 0) {
+            if ($_POST['time_sel_start'] && $_POST['time_sel_end']) {
                 $Start_time = $_POST['time_sel_start'];
                 $_SESSION['searchQuery'] .= " AND timeout='".$Start_time."'";
             }
-            elseif ($_POST['time_sel_start'] != 0 && $_POST['time_sel_end'] != 0) {
+            elseif ($_POST['time_sel_start'] && $_POST['time_sel_end']) {
                 $Start_time = $_POST['time_sel_start'];
             }
             //End time filter
-            if ($_POST['time_sel_end'] != 0) {
+            if ($_POST['time_sel_end']) {
                 $End_time = $_POST['time_sel_end'];
                 $_SESSION['searchQuery'] .= " AND timeout BETWEEN '".$Start_time."' AND '".$End_time."'";
             }
@@ -103,7 +103,7 @@ session_start();
             if (mysqli_num_rows($resultl) > 0){
                 while ($row = mysqli_fetch_assoc($resultl)){
         ?>
-                  <TR>
+                  <TR <?php if ($row['checkindate'] == date("Y-m-d") && $row['card_out'] == '0') echo ' class="present"' ?>>
                   <TD><?php echo $row['id'];?></TD>
                   <TD><?php echo $row['username'];?></TD>
                   <TD><?php echo $row['serialnumber'];?></TD>
@@ -118,6 +118,7 @@ session_start();
             }
         }
         // echo $sql;
+        //echo var_dump($_POST);
       ?>
     </tbody>
   </table>

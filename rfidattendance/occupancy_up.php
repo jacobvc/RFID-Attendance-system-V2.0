@@ -109,7 +109,7 @@ session_start();
             </div>
           </div>
           <?php
-        } else if ($row['checkindate'] == date("Y-m-d")) {
+        } else /* if ($row['checkindate'] == date("Y-m-d")) */ {
           ?>
           <div class="card">
             <div class="card-body
