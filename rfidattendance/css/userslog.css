@@ -178,7 +178,7 @@ section {
 }
 
 .present {
-  background-color: lightgreen !important;
+  background-color: #CC9933 !important;
 }
 
 .card {
@@ -190,6 +190,6 @@ section {
   font-weight: 300;
   font-size: 14px;
   color: #000;
-  background-color: #46abb9;
+  background-color: #388994;
   border-bottom: solid 2px rgba(255,255,255,0.1);
 }
