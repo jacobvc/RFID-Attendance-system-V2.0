@@ -1,12 +1,13 @@
 <?php
 	//Connect to database
-    $servername = "localhost";
-    $username = "root";		//put your phpmyadmin username.(default is "root")
-    $password = "";			//if your phpmyadmin has a password put it here.(default is "root")
-    $dbname = "";
+	$servername = "mysql.yourdevelopmentteam.com";
+    $username = "attendanceuser";		//put your phpmyadmin username.(default is "root")
+    $password = "100%AreWelcome";			//if your phpmyadmin has a password put it here.(default is "root")
+    $dbname = "rfidattendance";
     
 	$conn = new mysqli($servername, $username, $password, $dbname);
 
+/*
 	// Create database
 	$sql = "CREATE DATABASE biometricattendace";
 	if ($conn->query($sql) === TRUE) {
@@ -16,8 +17,8 @@
 	}
 
 	echo "<br>";
-
-	$dbname = "biometricattendace";
+*/
+	$dbname = "rfidattendance";
     
 	$conn = new mysqli($servername, $username, $password, $dbname);
 

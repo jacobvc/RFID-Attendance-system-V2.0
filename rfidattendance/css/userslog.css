@@ -173,3 +173,23 @@ section {
     transform: translate3d(0, 0, 0);
   }
 }
+
+.card-container {
+}
+
+.present {
+  background-color: lightgreen !important;
+}
+
+.card {
+  width: 250px;
+}
+
+.card-body {
+  padding: 15px;
+  font-weight: 300;
+  font-size: 14px;
+  color: #000;
+  background-color: #46abb9;
+  border-bottom: solid 2px rgba(255,255,255,0.1);
+}

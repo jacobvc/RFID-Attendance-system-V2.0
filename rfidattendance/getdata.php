@@ -1,9 +1,9 @@
 <?php  
 //Connect to database
 require 'connectDB.php';
-date_default_timezone_set('Asia/Damascus');
+date_default_timezone_set('America/Chicago');
 $d = date("Y-m-d");
-$t = date("H:i:sa");
+$t = date("H:i:s");
 
 if (isset($_GET['card_uid']) && isset($_GET['device_token'])) {
     
@@ -64,9 +64,12 @@ if (isset($_GET['card_uid']) && isset($_GET['device_token'])) {
                                         else{
                                             $timeout = "00:00:00";
                                             mysqli_stmt_bind_param($result, "sdssssss", $Uname, $Number, $card_uid, $device_uid, $device_dep, $d, $t, $timeout);
-                                            mysqli_stmt_execute($result);
-
-                                            echo "login".$Uname;
+                                            if (mysqli_stmt_execute($result)) {
+                                                echo "login".$Uname;
+                                            }
+                                            else {
+                                                echo "Error: " . $result->error;
+                                            }
                                             exit();
                                         }
                                     }
