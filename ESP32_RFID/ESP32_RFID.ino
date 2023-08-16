@@ -7,12 +7,13 @@
   the RFID attendance project with ESP32.
    ---------------------------------------------------------------------------*/
 //*******************************libraries********************************
+#include <Preferences.h>
+#include <time.h>
 //ESP32----------------------------
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
-#include <time.h>
 //RFID-----------------------------
 #include <SPI.h>
 #include <MFRC522.h>
@@ -61,14 +62,16 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #define RST_PIN 22
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance.
+Preferences preferences;
 
 WebServer server(80);
 
 //************************************************************************
 /* Set these to your desired credentials. */
-const char* ssid = "vinces_house";
-const char* password = "LifeIsGood";
-const char* device_token = "1cefe74e96591cbd";
+String ssid = "vinces_house";
+String password;
+String device_token;
+String URL;
 //************************************************************************
 int timezone = -5 * 3600;  //Replace "x" your timezone.
 int time_dst = 0;
@@ -76,7 +79,6 @@ String getData, Link;
 String OldCardID = "";
 unsigned long previousMillis1 = 0;
 unsigned long previousMillis2 = 0;
-String URL = "http://192.168.12.230/rfidattendance/getdata.php";  //computer IP or the server domain
 //*************************Biometric Icons*********************************
 #define Wifi_start_width 54
 #define Wifi_start_height 49
@@ -91,16 +93,21 @@ const uint8_t PROGMEM Wifi_connected_bits[] = {
 //************************************************************************
 void handleNotFound();
 void handleRoot();
-void connectToWiFi();
+void connectToWiFi(const char *ssid, const char *pw);
 void drawGraph();
 const int led = 2;
+bool apmode = false;
 
 #define TIME_WIDTH 128
 //************************************************************************
 
 void setup() {
-  delay(1000);
   Serial.begin(115200);
+  preferences.begin("rfid-scanner", false);
+  ssid = preferences.getString("ssid", "");
+  password = preferences.getString("password", "");
+  URL = preferences.getString("URL", "");
+
 
   //-----------initialize display-------------
 #ifdef USING_ST7735
@@ -118,20 +125,21 @@ void setup() {
   delay(2000);  // Pause for 2 seconds
   display.clearDisplay();
 #endif
+
   mfrc522.PCD_Init();  // Init MFRC522 card
 
   pinMode(led, OUTPUT);
   digitalWrite(led, 0);
   //---------------------------------------------
-  connectToWiFi();
+  connectToWiFi(ssid.c_str(), password.c_str());
   //---------------------------------------------
   configTime(timezone, time_dst, "pool.ntp.org", "time.nist.gov");
 }
 //************************************************************************
 void loop() {
   //check if there's a connection to Wi-Fi or not
-  if (!WiFi.isConnected()) {
-    connectToWiFi();  //Retry to connect to Wi-Fi
+  if (!WiFi.isConnected() && !apmode) {
+    connectToWiFi(ssid.c_str(), password.c_str());  //Retry to connect to Wi-Fi
   } else {
     server.handleClient();
   }
@@ -140,7 +148,7 @@ void loop() {
     previousMillis1 = millis();
 
     time_t now = time(nullptr);
-    struct tm* p_tm = localtime(&now);
+    struct tm *p_tm = localtime(&now);
     CLEAR_DISPLAY;
     display.setTextSize(1);            // Normal 2:2 pixel scale
     display.setTextColor(TEXT_COLOR);  // Draw white text
@@ -288,13 +296,13 @@ void SendCardID(String Card_uid) {
   }
 }
 //********************connect to the WiFi******************
-void connectToWiFi() {
+void connectToWiFi(const char *ssid, const char *pw) {
   WiFi.mode(WIFI_OFF);  //Prevents reconnection issue (taking too long to connect)
   delay(1000);
   WiFi.mode(WIFI_STA);
   Serial.print("Connecting to ");
   Serial.println(ssid);
-  WiFi.begin(ssid, password);
+  WiFi.begin(ssid, pw);
 
   CLEAR_DISPLAY;
   display.setTextSize(1);            // Normal 1:1 pixel scale
@@ -306,71 +314,95 @@ void connectToWiFi() {
   display.print(ssid);
   display.drawBitmap((SCREEN_WIDTH - Wifi_start_width) / 2, 10, Wifi_start_bits, Wifi_start_width, Wifi_start_height, TEXT_COLOR);
   UPDATE_DISPLAY;
-
-  while (WiFi.status() != WL_CONNECTED) {
+  int retries = 5;
+  while (WiFi.status() != WL_CONNECTED && retries-- > 0) {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("");
-  Serial.println("Connected");
+  if (WiFi.status() != WL_CONNECTED) {
+    if (!WiFi.softAP("rfid_scanner_setup", "")) {
+      Serial.println("Soft AP creation failed.");
+      while (1)
+        ;
+    }
+    Serial.println("Access point: rfid_scanner_setup");
+    Serial.println(WiFi.softAPIP());
+    apmode = true;
+  } else {
+    apmode = false;
+    Serial.println("");
+    Serial.println("Connected");
 
-  CLEAR_DISPLAY;
-  display.setTextSize(1);            // Normal 1:1 pixel scale
-  display.setTextColor(TEXT_COLOR);  // Draw white text
-  display.setCursor(0, 0);           // Start at top-left corner
-  display.print(F("Connected "));
-  display.print(WiFi.localIP());
-  display.drawBitmap((SCREEN_WIDTH - Wifi_connected_width) / 2, 15, Wifi_connected_bits, Wifi_connected_width, Wifi_connected_height, TEXT_COLOR);
-  UPDATE_DISPLAY;
+    CLEAR_DISPLAY;
+    display.setTextSize(1);            // Normal 1:1 pixel scale
+    display.setTextColor(TEXT_COLOR);  // Draw white text
+    display.setCursor(0, 0);           // Start at top-left corner
+    display.print(F("Connected "));
+    display.print(WiFi.localIP());
+    display.drawBitmap((SCREEN_WIDTH - Wifi_connected_width) / 2, 15, Wifi_connected_bits, Wifi_connected_width, Wifi_connected_height, TEXT_COLOR);
+    UPDATE_DISPLAY;
 
-  server.begin();
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());  //IP address assigned to your ESP
-
-  if (MDNS.begin("RFID Scanner")) {
-      Serial.println("MDNS responder started");
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());  //IP address assigned to your ESP
   }
+  if (MDNS.begin("RFID Scanner")) {
+    Serial.println("MDNS responder started");
+  }
+  server.begin();
   MDNS.addService("http", "tcp", 80);
 
-    server.on("/", handleRoot);
-    server.on("/test.svg", drawGraph);
-    server.on("/inline", []() {
-      server.send(200, "text/plain", "this works as well");
-    });
-    server.onNotFound(handleNotFound);
-    server.begin();
-    Serial.println("HTTP server started");
-  
+  server.on("/", handleRoot);
+  server.on("/test.svg", drawGraph);
+  server.on("/inline", []() {
+    server.send(200, "text/plain", "this works as well");
+  });
+  server.onNotFound(handleNotFound);
+  server.begin();
+  Serial.println("HTTP server started");
+
   delay(3000);
 }
 //=======================================================================
+char temp[4000];
 
 void handleRoot() {
+ for (uint8_t i = 0; i < server.args(); i++) {
+    Serial.println(" " + server.argName(i) + ": " + server.arg(i));
+  }
   digitalWrite(led, 1);
-  char temp[400];
   int sec = millis() / 1000;
   int min = sec / 60;
   int hr = min / 60;
 
-  snprintf(temp, 400,
+  snprintf(temp, sizeof(temp) ,R"(
+  <html>
+<head>
+  <!-- <meta http-equiv='refresh' content='5' /> -->
+    <title>Scanner Configuration</title>
+    <style>
+        body {
+            background-color: #cccccc;
+            font-family: Arial, Helvetica, Sans-Serif;
+            Color: #000088;
+        }
+    </style>
+</head>
 
-           "<html>\
-  <head>\
-    <meta http-equiv='refresh' content='5'/>\
-    <title>ESP32 Demo</title>\
-    <style>\
-      body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\
-    </style>\
-  </head>\
-  <body>\
-    <h1>Hello from ESP32!</h1>\
-    <p>Uptime: %02d:%02d:%02d</p>\
-    <img src=\"/test.svg\" />\
-  </body>\
-</html>",
+<body>
+    <h1>RFID Scanner Configuration</h1>
+    <p>Uptime: %02d:%02d:%02d</p>
+    <form method="POST">
+        <label for="ssid">SSID:</label>
+        <input type="text" id="ssid" name="ssid" value="%s"><br>
+        <label for="pw">Password:</label>
+        <input type="text" id="pw" name="pw" value="%s"><br><br>
+        <input type="submit" value="Submit">
+      </form> 
+      </body>
+</html>
+)",
 
-           hr, min % 60, sec % 60
-          );
+           hr, min % 60, sec % 60, "", "");
   server.send(200, "text/html", temp);
   digitalWrite(led, 0);
 }
