@@ -58,9 +58,10 @@ void SendCardID(String Card_uid) {
     String getData, Link;
     HTTPClient http;  //Declare object of class HTTPClient
     //GET Data
-    getData = "?card_uid=" + String(Card_uid) + "&device_uid=" + String(device_uid);  // Add the Card ID to the GET array in order to send it
+    getData = "?card_uid=" + String(Card_uid) + "&device_token=" + String(device_uid);  // Add the Card ID to the GET array in order to send it
     //GET methode
     Link = url + getData;
+    Serial.println(Link);
     http.begin(Link);  //initiate HTTP request   //Specify content-type header
 
     int httpCode = http.GET();          //Send the request
@@ -245,8 +246,8 @@ Serial.println("NO ARGS");
     <input type="text" id="ssid" name="ssid" value="%s"><br>
     <label for="pw">Password:</label>
     <input type="text" id="pw" name="pw" value=""><br>
-    <label for="device_id">Device ID:</label>
-    <input type="text" id="device_id" name="device_id" value="%s"><br>
+    <label for="device_uid">Device UID:</label>
+    <input type="text" id="device_uid" name="device_uid" value="%s"><br>
     <label for="url">Server URL:</label>
     <input type="text" id="url" name="url" value="%s"><br><br>
     <input type="submit" value="Submit">
