@@ -62,6 +62,7 @@ void setup() {
 //************************************************************************
 void loop() {
   RfidWiFiTick();
+  if (RfidWiFiApMode()) return;
   //---------------------------------------------
   if (millis() - previousMillis1 >= 1000) {
     previousMillis1 = millis();
@@ -90,19 +91,6 @@ void loop() {
     //display.print(" ");
     UPDATE_DISPLAY;
   }
-  //   SendCardID("101759940994");
-  /*
-1087631147.3398438
-loginFlynn, Gabe
-Scan Card
-
-397499769.5078125
-loginJacobson, Vince
-
- 101759940994: 17 b1 5d 79 (82) ARDUINO 2317793121 = 8A26B761
- 278433573719: 40 d3 ef 2b (57) ARDUINO 6421123943
-*/
-  //   delay(5000);
   //---------------------------------------------
   if (millis() - previousMillis2 >= 15000) {
     previousMillis2 = millis();

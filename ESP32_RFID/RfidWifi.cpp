@@ -14,7 +14,7 @@ const uint8_t PROGMEM Wifi_connected_bits[] = {
 
 String ssid;
 String password;
-String device_uid;
+String device_token;
 String url;
 
 const int led = 2;
@@ -27,22 +27,20 @@ void handleNotFound();
 void handleRoot();
 void drawGraph();
 
-void RfidWiFiSetup(void)
-{
+void RfidWiFiSetup(void) {
   preferences.begin("rfid-scanner", false);
-  ssid = preferences.getString("ssid", "");
+//  ssid = preferences.getString("ssid", "");
   password = preferences.getString("password", "");
-  device_uid = preferences.getString("device_uid", "");
+  device_token = preferences.getString("device_token", "");
   url = preferences.getString("url", "");
 
   pinMode(led, OUTPUT);
   digitalWrite(led, 0);
-  
+
   connectToWiFi(ssid.c_str(), password.c_str());
 }
 
-void RfidWiFiTick(void)
-{
+void RfidWiFiTick(void) {
   //check if there's a connection to Wi-Fi or not
   if (!WiFi.isConnected() && !apmode) {
     connectToWiFi(ssid.c_str(), password.c_str());  //Retry to connect to Wi-Fi
@@ -51,6 +49,9 @@ void RfidWiFiTick(void)
   }
 }
 
+bool RfidWiFiApMode() {
+  return apmode;
+}
 //************send the Card UID to the website*************
 void SendCardID(String Card_uid) {
   Serial.println("Sending the Card ID");
@@ -58,7 +59,7 @@ void SendCardID(String Card_uid) {
     String getData, Link;
     HTTPClient http;  //Declare object of class HTTPClient
     //GET Data
-    getData = "?card_uid=" + String(Card_uid) + "&device_token=" + String(device_uid);  // Add the Card ID to the GET array in order to send it
+    getData = "?card_uid=" + String(Card_uid) + "&device_token=" + String(device_token);  // Add the Card ID to the GET array in order to send it
     //GET methode
     Link = url + getData;
     Serial.println(Link);
@@ -124,37 +125,47 @@ void SendCardID(String Card_uid) {
     }
   }
 }
-
 void connectToWiFi(const char *ssid, const char *pw) {
-  WiFi.mode(WIFI_OFF);  //Prevents reconnection issue (taking too long to connect)
-  delay(1000);
-  WiFi.mode(WIFI_STA);
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, pw);
+  if (*ssid) {
+    // Only try to connect if ssid is not blank
+    WiFi.mode(WIFI_OFF);  //Prevents reconnection issue (taking too long to connect)
+    delay(1000);
+    WiFi.mode(WIFI_STA);
+    Serial.print("Connecting to ");
+    Serial.println(ssid);
+    WiFi.begin(ssid, pw);
 
-  CLEAR_DISPLAY;
-  display.setTextSize(1);            // Normal 1:1 pixel scale
-  display.setTextColor(TEXT_COLOR);  // Draw white text
-  display.setCursor(0, 0);           // Start at top-left corner
-  display.print(F("Connecting to \n"));
-  display.setCursor(0, 60);
-  display.setTextSize(2);
-  display.print(ssid);
-  display.drawBitmap((SCREEN_WIDTH - Wifi_start_width) / 2, 10, Wifi_start_bits, Wifi_start_width, Wifi_start_height, TEXT_COLOR);
-  UPDATE_DISPLAY;
-  int retries = 30;
-  while (WiFi.status() != WL_CONNECTED && retries-- > 0) {
-    delay(500);
-    Serial.print(".");
+    CLEAR_DISPLAY;
+    display.setTextSize(2);            // Normal 1:1 pixel scale
+    display.setTextColor(TEXT_COLOR);  // Draw white text
+    display.setCursor(0, 0);           // Start at top-left corner
+    display.print(F("Connecting to \n"));
+    display.setCursor(0, 60);
+    display.setTextSize(2);
+    display.print(ssid);
+    display.drawBitmap((SCREEN_WIDTH - Wifi_start_width) / 2, 10, Wifi_start_bits, Wifi_start_width, Wifi_start_height, TEXT_COLOR);
+    UPDATE_DISPLAY;
+    int retries = 30;
+    while (WiFi.status() != WL_CONNECTED && retries-- > 0) {
+      delay(500);
+      Serial.print(".");
+    }
   }
   if (WiFi.status() != WL_CONNECTED) {
-    if (!WiFi.softAP("rfid_scanner_setup", "")) {
+    if (!WiFi.softAP(CONFIG_AP_SSID, "")) {
       Serial.println("Soft AP creation failed.");
       while (1)
         ;
     }
-    Serial.println("Access point: rfid_scanner_setup");
+    CLEAR_DISPLAY;
+    display.setTextSize(1);            // Normal 1:1 pixel scale
+    display.setTextColor(TEXT_COLOR);  // Draw white text
+    display.setCursor(0, 0);           // Start at top-left corner
+    display.print(F("NO WiFi\n\nConnect to AP\n" CONFIG_AP_SSID "\nAnd Browse to\n"));
+    display.print(WiFi.softAPIP());
+    UPDATE_DISPLAY;
+
+    Serial.println("Access point: " CONFIG_AP_SSID);
     Serial.println(WiFi.softAPIP());
     apmode = true;
   } else {
@@ -174,6 +185,8 @@ void connectToWiFi(const char *ssid, const char *pw) {
     Serial.print("IP address: ");
     Serial.println(WiFi.localIP());  //IP address assigned to your ESP
   }
+  // If we got here, wifi is connected
+  // Start MDNS and the http server
   if (MDNS.begin("RFID Scanner")) {
     Serial.println("MDNS responder started");
   }
@@ -181,9 +194,9 @@ void connectToWiFi(const char *ssid, const char *pw) {
   MDNS.addService("http", "tcp", 80);
 
   server.on("/", handleRoot);
-//  server.on("/inline", []() {
-//    server.send(200, "text/plain", "this works as well");
-//  });
+  //  server.on("/inline", []() {
+  //    server.send(200, "text/plain", "this works as well");
+  //  });
   server.onNotFound(handleNotFound);
   server.begin();
   Serial.println("HTTP server started");
@@ -194,32 +207,28 @@ void connectToWiFi(const char *ssid, const char *pw) {
 char temp[4000];
 
 void handleRoot() {
-/* for (uint8_t i = 0; i < server.args(); i++) {
-    Serial.println(" " + server.argName(i) + ": " + server.arg(i));
-    if (server.argName(i) == "ssid") {
-    }
-  } */
   if (server.args() > 0) {
-  Serial.println(" ssid: " + server.arg("ssid"));
-  Serial.println(" pw: " + server.arg("pw"));
-  Serial.println(" device_uid: " + server.arg("device_uid"));
-  url = server.arg("url");
-  ssid = server.arg("ssid");
-  password = server.arg("pw");
-  device_uid = server.arg("device_uid");
-  Serial.println(" url: " + server.arg("url"));
-  preferences.putString("ssid", ssid);
-  preferences.putString("password", password);
-  preferences.putString("device_uid", device_uid);
-  preferences.putString("url", url);
-  }
-  else {
-Serial.println("NO ARGS");
+    url = server.arg("url");
+    ssid = server.arg("ssid");
+    password = server.arg("pw");
+    device_token = server.arg("device_token");
+
+    Serial.println(" ssid: " + server.arg("ssid"));
+    Serial.println(" pw: " + server.arg("pw"));
+    Serial.println(" device_token: " + server.arg("device_token"));
+    Serial.println(" url: " + server.arg("url"));
+
+    preferences.putString("ssid", ssid);
+    preferences.putString("password", password);
+    preferences.putString("device_token", device_token);
+    preferences.putString("url", url);
+  } else {
+    Serial.println("NO ARGS");
   }
 
   digitalWrite(led, 1);
 
-  snprintf(temp, sizeof(temp) ,R"(
+  snprintf(temp, sizeof(temp), R"(
 <html>
 
 <head>
@@ -246,8 +255,8 @@ Serial.println("NO ARGS");
     <input type="text" id="ssid" name="ssid" value="%s"><br>
     <label for="pw">Password:</label>
     <input type="text" id="pw" name="pw" value=""><br>
-    <label for="device_uid">Device UID:</label>
-    <input type="text" id="device_uid" name="device_uid" value="%s"><br>
+    <label for="device_token">Device Token:</label>
+    <input type="text" id="device_token" name="device_token" value="%s"><br>
     <label for="url">Server URL:</label>
     <input type="text" id="url" name="url" value="%s"><br><br>
     <input type="submit" value="Submit">
@@ -255,7 +264,8 @@ Serial.println("NO ARGS");
 </body>
 
 </html>
-)", ssid.c_str(), device_uid.c_str(), url.c_str());
+)",
+           ssid.c_str(), device_token.c_str(), url.c_str());
   server.send(200, "text/html", temp);
   digitalWrite(led, 0);
 }

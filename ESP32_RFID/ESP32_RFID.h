@@ -2,10 +2,13 @@
 
 #include <Preferences.h>
 #include <time.h>
+
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
+
+#define CONFIG_AP_SSID "rfid_config_ap"
 
 #include <Adafruit_GFX.h>  //https://github.com/adafruit/Adafruit-GFX-Library
 #ifdef USING_ST7735
@@ -47,3 +50,4 @@ void SendCardID(String Card_uid);
 
 extern void RfidWiFiSetup(void);
 extern void RfidWiFiTick(void);
+extern bool RfidWiFiApMode(void);
