@@ -16,6 +16,7 @@ String ssid;
 String password;
 String device_token;
 String url;
+String tz;
 
 const int led = 2;
 bool apmode = false;
@@ -33,6 +34,7 @@ void RfidWiFiSetup(void) {
   password = preferences.getString("password", "");
   device_token = preferences.getString("device_token", "");
   url = preferences.getString("url", "");
+  tz = preferences.getString("tz", "");
 
   pinMode(led, OUTPUT);
   digitalWrite(led, 0);
@@ -158,10 +160,17 @@ void connectToWiFi(const char *ssid, const char *pw) {
         ;
     }
     CLEAR_DISPLAY;
-    display.setTextSize(1);            // Normal 1:1 pixel scale
+    display.setTextSize(2);
+    display.setTextColor(RED);  // Draw white text
+    display.setCursor(8, 3);           // Start at top-left corner
+    display.print(F("NO WiFi\n"));
     display.setTextColor(TEXT_COLOR);  // Draw white text
-    display.setCursor(0, 0);           // Start at top-left corner
-    display.print(F("NO WiFi\n\nConnect to AP\n" CONFIG_AP_SSID "\nAnd Browse to\n"));
+    display.print(F("\nConnect to AP\n "));
+    display.setTextColor(BLUE);  // Draw white text
+    display.print(CONFIG_AP_SSID);
+    display.setTextColor(TEXT_COLOR);  // Draw white text
+    display.print(F("\nAnd Browse to\n "));
+    display.setTextColor(BLUE);  // Draw white text
     display.print(WiFi.softAPIP());
     UPDATE_DISPLAY;
 
@@ -195,9 +204,7 @@ void connectToWiFi(const char *ssid, const char *pw) {
   MDNS.addService("http", "tcp", 80);
 
   server.on("/", handleRoot);
-  //  server.on("/inline", []() {
-  //    server.send(200, "text/plain", "this works as well");
-  //  });
+  server.on("/timezones.js", handleTimezoneJs);
   server.onNotFound(handleNotFound);
   server.begin();
   Serial.println("HTTP server started");
@@ -213,14 +220,17 @@ void handleRoot() {
     String newSsid = server.arg("ssid");
     password = server.arg("pw");
     device_token = server.arg("device_token");
+    tz = server.arg("tz");
 
     Serial.println(" ssid: " + server.arg("ssid"));
     Serial.println(" pw: " + server.arg("pw"));
     Serial.println(" device_token: " + server.arg("device_token"));
     Serial.println(" url: " + server.arg("url"));
+    Serial.println(" tz: " + server.arg("tz"));
 
     preferences.putString("device_token", device_token);
     preferences.putString("url", url);
+    preferences.putString("tz", tz);
 
     if (apmode) {
       // Check to try connect
@@ -305,12 +315,15 @@ void handleRoot() {
 
   digitalWrite(led, 1);
 
+  char tmpTz[80];
+  strcpy(tmpTz, tz.c_str());
+
   snprintf(temp, sizeof(temp), R"(
 <html>
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script type="application/javascript" src="timezones.js"></script>
   <title>Scanner Configuration</title>
   <style>
     body {
@@ -320,29 +333,35 @@ void handleRoot() {
     }
     label {
       display: inline-block;
-      width: 100px;
+      width: 110px;
+    }
+    select, input[type=text] {
+      width: 250px;
     }
   </style>
+  <script>
+  </script>
 </head>
-
-<body>
+<body onload="addtimezone('tz') "></body>
   <h1>RFID Scanner Configuration</h1>
   <form method="POST">
-    <label for="ssid">SSID:</label>
+    <label for="ssid">SSID</label>
     <input type="text" id="ssid" name="ssid" value="%s"><br>
-    <label for="pw">Password:</label>
+    <label for="pw">Password</label>
     <input type="text" id="pw" name="pw" value=""><br>
-    <label for="device_token">Device Token:</label>
+    <label for="tz">Timezone</label>
+    <select type="text" id="tz" name="tz">
+      <option selected="selected">%s</option>
+    </select><br>
+    <label for="device_token">Device Token</label>
     <input type="text" id="device_token" name="device_token" value="%s"><br>
-    <label for="url">Server URL:</label>
+    <label for="url">Server URL</label>
     <input type="text" id="url" name="url" value="%s"><br><br>
     <input type="submit" value="Submit">
   </form>
 </body>
-
 </html>
-)",
-           ssid.c_str(), device_token.c_str(), url.c_str());
+)", ssid.c_str(), strtok(tmpTz, ";"), device_token.c_str(), url.c_str());
   server.send(200, "text/html", temp);
   digitalWrite(led, 0);
 }
@@ -365,3 +384,8 @@ void handleNotFound() {
   server.send(404, "text/plain", message);
   digitalWrite(led, 0);
 }
+void handleTimezoneJs() {
+  extern const char *timezone_js;
+  server.send(200, "text/plain", timezone_js);
+}
+

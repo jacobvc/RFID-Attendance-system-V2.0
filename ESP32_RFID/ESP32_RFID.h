@@ -8,7 +8,7 @@
 #include <WebServer.h>
 #include <ESPmDNS.h>
 
-#define CONFIG_AP_SSID "rfid_config_ap"
+#define CONFIG_AP_SSID "rfid_config"
 
 #include <Adafruit_GFX.h>  //https://github.com/adafruit/Adafruit-GFX-Library
 #ifdef USING_ST7735
@@ -21,8 +21,12 @@
 #define SCREEN_WIDTH 160   // LED display width, in pixels
 #define SCREEN_HEIGHT 128  // LED display height, in pixels
 
-#define BACKGROUND_COLOR ST77XX_BLACK
-#define TEXT_COLOR ST77XX_WHITE
+#define BLACK ST77XX_BLACK
+#define WHITE ST77XX_WHITE
+#define RED ST77XX_RED
+#define BLUE ST77XX_BLUE
+#define GREEN ST77XX_GREEN
+
 #define CLEAR_DISPLAY display.fillScreen(BACKGROUND_COLOR)
 #define UPDATE_DISPLAY  // No update needed
 extern Adafruit_ST7735 display;
@@ -37,13 +41,13 @@ extern Adafruit_ST7735 display;
 #define SCREEN_HEIGHT 64  // OLED display height, in pixels
 #define OLED_RESET 0      // Reset pin # (or -1 if sharing Arduino reset pin)
 
-#define BACKGROUND_COLOR BLACK
-#define TEXT_COLOR WHITE
 #define CLEAR_DISPLAY display.clearDisplay()
 #define UPDATE_DISPLAY display.display()
 
 extern Adafruit_SSD1306;
 #endif
+#define BACKGROUND_COLOR WHITE
+#define TEXT_COLOR BLACK
 
 void connectToWiFi(const char *ssid, const char *pw);
 void SendCardID(String Card_uid);
@@ -51,3 +55,5 @@ void SendCardID(String Card_uid);
 extern void RfidWiFiSetup(void);
 extern void RfidWiFiTick(void);
 extern bool RfidWiFiApMode(void);
+extern void handleTimezoneJs();
+

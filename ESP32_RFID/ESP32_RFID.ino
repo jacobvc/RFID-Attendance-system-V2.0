@@ -72,7 +72,7 @@ void loop() {
     CLEAR_DISPLAY;
     display.setTextSize(1);            // Normal 2:2 pixel scale
     display.setTextColor(TEXT_COLOR);  // Draw white text
-    display.setCursor(0, 0);
+    display.setCursor(6, 3);
     display.print(p_tm);
     //display.print("    ");
     //Serial.println(p_tm);
@@ -107,16 +107,11 @@ void loop() {
   if (!mfrc522.PICC_ReadCardSerial()) {
     return;  //if read card serial(0) returns 1, the uid struct contians the ID of the read card.
   }
-  String CardID = "";
-  int cardIdNum = 0;
-  for (byte i = 0; i < mfrc522.uid.size; i++) {
-    CardID += mfrc522.uid.uidByte[i];
-    cardIdNum = cardIdNum * 256 + mfrc522.uid.uidByte[i];
-    //Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
-    // Serial.print(mfrc522.uid.uidByte[i], HEX);
-  }
   char buffer[32];
-  sprintf(buffer, "%d", cardIdNum);
+  sprintf(buffer, "%02x%02x%02x%02x", mfrc522.uid.uidByte[0], 
+    mfrc522.uid.uidByte[1], mfrc522.uid.uidByte[2], mfrc522.uid.uidByte[3]);
+
+  String CardID = buffer;
 
   //---------------------------------------------
   if (CardID == OldCardID) {
