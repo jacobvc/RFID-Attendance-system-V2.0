@@ -29,7 +29,7 @@ void drawGraph();
 
 void RfidWiFiSetup(void) {
   preferences.begin("rfid-scanner", false);
-//  ssid = preferences.getString("ssid", "");
+  ssid = preferences.getString("ssid", "");
   password = preferences.getString("password", "");
   device_token = preferences.getString("device_token", "");
   url = preferences.getString("url", "");
@@ -168,7 +168,8 @@ void connectToWiFi(const char *ssid, const char *pw) {
     Serial.println("Access point: " CONFIG_AP_SSID);
     Serial.println(WiFi.softAPIP());
     apmode = true;
-  } else {
+  } 
+  else {
     apmode = false;
     Serial.println("");
     Serial.println("Connected");
@@ -209,7 +210,7 @@ char temp[4000];
 void handleRoot() {
   if (server.args() > 0) {
     url = server.arg("url");
-    ssid = server.arg("ssid");
+    String newSsid = server.arg("ssid");
     password = server.arg("pw");
     device_token = server.arg("device_token");
 
@@ -218,12 +219,88 @@ void handleRoot() {
     Serial.println(" device_token: " + server.arg("device_token"));
     Serial.println(" url: " + server.arg("url"));
 
-    preferences.putString("ssid", ssid);
-    preferences.putString("password", password);
     preferences.putString("device_token", device_token);
     preferences.putString("url", url);
-  } else {
-    Serial.println("NO ARGS");
+
+    if (apmode) {
+      // Check to try connect
+      // Id there is a new ssid, try to use it
+      if (!newSsid.isEmpty()) {
+        ssid = newSsid;
+        preferences.putString("ssid", ssid);
+        preferences.putString("password", password);
+        Serial.println("Trying access point " + ssid);
+        snprintf(temp, sizeof(temp),  R"(
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scanner Configuration</title>
+  <style>
+    body {
+      background-color: #cccccc;
+      font-family: Arial, Helvetica, Sans-Serif;
+      Color: #000088;
+    }
+  </style>
+</head>
+<body>
+  <h1>RFID Scanner Configuration</h1><br>
+  <h2>Connecting to access point %s</h2>
+</body>
+</html>
+        )", ssid.c_str());
+        server.send(200, "text/html", temp);
+        delay(100);
+
+        MDNS.end();
+        server.close();
+        WiFi.softAPdisconnect();
+        WiFi.disconnect();
+        apmode = false;
+        delay(100);
+        return;
+      }
+    }
+    else {
+      if (!ssid.equals(newSsid)) {
+        Serial.println("Trying access point " + newSsid);
+        snprintf(temp, sizeof(temp),  R"(
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scanner Configuration</title>
+  <style>
+    body {
+      background-color: #cccccc;
+      font-family: Arial, Helvetica, Sans-Serif;
+      Color: #000088;
+    }
+  </style>
+</head>
+<body>
+  <h1>RFID Scanner Configuration</h1><br>
+  <h2>Changing access point from %s to %s</h2>
+</body>
+</html>
+        )", ssid.c_str(), newSsid.c_str());
+        server.send(200, "text/html", temp);
+        ssid = newSsid;
+        preferences.putString("ssid", ssid);
+        preferences.putString("password", password);
+        delay(100);
+
+        MDNS.end();
+        server.close();
+        WiFi.disconnect();
+        delay(100);
+        return;
+      }
+    }
+  } 
+  else {
+    Serial.println("root url: NO ARGS");
   }
 
   digitalWrite(led, 1);
