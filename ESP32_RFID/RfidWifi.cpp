@@ -334,6 +334,8 @@ static void handleRoot() {
 
   char tmpTz[80];
   strcpy(tmpTz, tz.c_str());
+  const char *tzname = strtok(tmpTz, ";");
+  if (!tzname) tzname = "";
 
   snprintf(temp, sizeof(temp), R"(
 <html>
@@ -378,7 +380,7 @@ static void handleRoot() {
   </form>
 </body>
 </html>
-)", ssid.c_str(), strtok(tmpTz, ";"), device_token.c_str(), url.c_str());
+)", ssid.c_str(), tzname, device_token.c_str(), url.c_str());
   server.send(200, "text/html", temp);
   digitalWrite(led, 0);
 }
