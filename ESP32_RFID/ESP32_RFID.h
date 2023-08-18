@@ -1,5 +1,3 @@
-#define USING_ST7735
-
 #include <Preferences.h>
 #include <time.h>
 
@@ -8,7 +6,23 @@
 #include <WebServer.h>
 #include <ESPmDNS.h>
 
+/*
+ *
+ * Defines / Macros 
+ *
+ */
+
+#define USING_ST7735
 #define CONFIG_AP_SSID "rfid_config"
+
+#define BACKGROUND_COLOR WHITE
+#define TEXT_COLOR BLACK
+
+/*
+ *
+ * Display normalization  (for ST7735 vs SSD1306)
+ *
+ */
 
 #include <Adafruit_GFX.h>  //https://github.com/adafruit/Adafruit-GFX-Library
 #ifdef USING_ST7735
@@ -46,14 +60,16 @@ extern Adafruit_ST7735 display;
 
 extern Adafruit_SSD1306;
 #endif
-#define BACKGROUND_COLOR WHITE
-#define TEXT_COLOR BLACK
 
-void connectToWiFi(const char *ssid, const char *pw);
-void SendCardID(String Card_uid);
+/*
+ *
+ * Function Prototypes
+ *
+ */
+extern void connectToWiFi(const char *ssid, const char *pw);
+extern void SendCardID(String Card_uid);
 
 extern void RfidWiFiSetup(void);
 extern void RfidWiFiTick(void);
 extern bool RfidWiFiApMode(void);
-extern void handleTimezoneJs();
 
