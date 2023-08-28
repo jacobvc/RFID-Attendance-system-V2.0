@@ -6,6 +6,9 @@
   This code was created by Electronics Tech channel for 
   the RFID attendance project with ESP32.
    ---------------------------------------------------------------------------*/
+
+#include "RfidSound.h"
+
 //*******************************libraries********************************
 #include "ESP32_RFID.h"
 //RFID-----------------------------
@@ -55,6 +58,8 @@ void setup() {
 #endif
 
   mfrc522.PCD_Init();  // Init MFRC522 card
+
+  sound_startup();
 
   RfidWiFiSetup();
   configTime(timezone, time_dst, "pool.ntp.org", "time.nist.gov");

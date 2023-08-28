@@ -1,5 +1,5 @@
 #include "ESP32_RFID.h"
-
+#include "RfidSound.h"
 //************************* Biometric Icons *********************************
 #define Wifi_start_width 54
 #define Wifi_start_height 49
@@ -106,6 +106,7 @@ void SendCardID(String Card_uid) {
         display.setCursor(0, 20);
         display.print(user_name);
         UPDATE_DISPLAY;
+        sound_arrive();
       } else if (payload.substring(0, 6) == "logout") {
         String user_name = payload.substring(6);
         //  Serial.println(user_name);
@@ -118,6 +119,7 @@ void SendCardID(String Card_uid) {
         display.setCursor(0, 20);
         display.print(user_name);
         UPDATE_DISPLAY;
+        sound_depart();
       } else if (payload == "succesful") {
         CLEAR_DISPLAY;
         display.setTextSize(2);            // Normal 2:2 pixel scale

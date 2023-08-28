@@ -48,7 +48,7 @@ extern Adafruit_ST7735 display;
 // SSD1306
 #include <Wire.h>
 #include <Adafruit_SSD1306.h>  //https://github.com/adafruit/Adafruit_SSD1306
-#define SS_PIN 4
+#define SS_PIN 4-
 #define RST_PIN 22
 // Declaration for SSD1306 display connected using software I2C pins are(22 SCL, 21 SDA)
 #define SCREEN_WIDTH 128  // OLED display width, in pixels
