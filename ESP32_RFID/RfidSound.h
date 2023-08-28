@@ -95,6 +95,6 @@
 #define NOTE_D8  4699
 #define NOTE_DS8 4978
 
-extern void sound_startup();
-extern void sound_depart();
-extern void sound_arrive();
+extern void RfidSoundLaunch();
+extern void RfidSoundDepart();
+extern void RfidSoundArrive();

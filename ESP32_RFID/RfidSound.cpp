@@ -1,38 +1,17 @@
 #include "RfidSound.h"
 #include <arduino.h>
 
-void sound_arrive()
+#define COUNTOF(arr) (sizeof(arr) / sizeof(arr[0]))
+typedef struct {
+  int note;
+  int duration;
+} tune;
+
+static void play(tune *notes, int count)
 {
-  int melody[] = {
-    NOTE_C3, NOTE_G4
-  };
-
-  unsigned char durations[] = {
-    6, 8
-  };
-
- for (int thisNote = 0; thisNote < sizeof(durations); thisNote++) {
-    int noteDuration = 1000 / durations[thisNote];
-    tone(BUZZZER_PIN, melody[thisNote], noteDuration);
-
-    int pauseBetweenNotes = noteDuration * 1.30;
-    delay(pauseBetweenNotes);
-    noTone(BUZZZER_PIN);
-  }
-}
-void sound_depart()
-{
-  int melody[] = {
-    NOTE_G4, NOTE_C3
-  };
-
-  unsigned char durations[] = {
-    6, 8
-  };
-
- for (int thisNote = 0; thisNote < sizeof(durations); thisNote++) {
-    int noteDuration = 1000 / durations[thisNote];
-    tone(BUZZZER_PIN, melody[thisNote], noteDuration);
+ for (int thisNote = 0; thisNote < count; thisNote++) {
+    int noteDuration = 1000 / notes[thisNote].duration;
+    tone(BUZZZER_PIN, notes[thisNote].note, noteDuration);
 
     int pauseBetweenNotes = noteDuration * 1.30;
     delay(pauseBetweenNotes);
@@ -40,22 +19,21 @@ void sound_depart()
   }
 }
 
-void sound_startup()
+void RfidSoundArrive()
 {
-  int melody[] = {
-    NOTE_C4, NOTE_G3, NOTE_G3, NOTE_A3, NOTE_G3, 0, NOTE_B3, NOTE_C4
+  tune diddy[] = { { NOTE_C3, 6 }, { NOTE_G4, 8}  };
+  play(diddy, COUNTOF(diddy));
+}
+void RfidSoundDepart()
+{
+  tune diddy[] = { { NOTE_G4, 6 }, { NOTE_C3, 8}  };
+  play(diddy, COUNTOF(diddy));
+}
+
+void RfidSoundLaunch()
+{
+  tune diddy[] = {
+    { NOTE_C4, 4 }, { NOTE_G3, 8 }, { NOTE_G3, 8 }, { NOTE_A3, 4 }, { NOTE_G3, 4 }, { 0, 4 }, { NOTE_B3, 4 }, { NOTE_C4, 4 }
   };
-
-  unsigned char durations[] = {
-    4, 8, 8, 4, 4, 4, 4, 4
-  };
-
- for (int thisNote = 0; thisNote < sizeof(durations); thisNote++) {
-    int noteDuration = 1000 / durations[thisNote];
-    tone(BUZZZER_PIN, melody[thisNote], noteDuration);
-
-    int pauseBetweenNotes = noteDuration * 1.30;
-    delay(pauseBetweenNotes);
-    noTone(BUZZZER_PIN);
-  }
+  play(diddy, COUNTOF(diddy));
 }
