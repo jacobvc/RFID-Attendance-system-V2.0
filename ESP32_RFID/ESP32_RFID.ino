@@ -19,7 +19,7 @@
 #define SS_PIN 21
 #define RST_PIN 22
 
-MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance.
+MFRC522 rfid(SS_PIN, RST_PIN);  // Create MFRC522 instance.
 
 //************************************************************************
 int timezone = -5 * 3600;  //Replace "x" your timezone.
@@ -32,8 +32,8 @@ unsigned long previousMillis2 = 0;
 void setup() {
   Serial.begin(115200);
 
+  rfid.PCD_Init();  // Init MFRC522 card
   RfidLcdSetup();
-  mfrc522.PCD_Init();  // Init MFRC522 card
 
   RfidSoundLaunch();
 
@@ -60,12 +60,19 @@ void loop() {
 
   //---------------------------------------------
   //look for new card
-  if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
+  if ( ! rfid.PICC_IsNewCardPresent())
+    return;
+
+  // Verify if the NUID has been readed
+  if ( ! rfid.PICC_ReadCardSerial())
+    return;
+  //if (rfid.PICC_IsNewCardPresent() && rfid.PICC_ReadCardSerial()) 
+  {
     // New card, successfully read. The uid struct contians the ID of the new card.
     char buffer[32];
     // Format as 4 bytes in lower case hex 
-    sprintf(buffer, "%02x%02x%02x%02x", mfrc522.uid.uidByte[0],
-            mfrc522.uid.uidByte[1], mfrc522.uid.uidByte[2], mfrc522.uid.uidByte[3]);
+    sprintf(buffer, "%02x%02x%02x%02x", rfid.uid.uidByte[0],
+            rfid.uid.uidByte[1], rfid.uid.uidByte[2], rfid.uid.uidByte[3]);
 
     String CardID = buffer;
 

@@ -30,8 +30,8 @@ extern Adafruit_ST7735 display;
 // SSD1306
 #include <Wire.h>
 #include <Adafruit_SSD1306.h>  //https://github.com/adafruit/Adafruit_SSD1306
-#define SS_PIN 4-
-#define RST_PIN 22
+#define SS_PIN 5
+#define RST_PIN 4
 // Declaration for SSD1306 display connected using software I2C pins are(22 SCL, 21 SDA)
 #define SCREEN_WIDTH 128  // OLED display width, in pixels
 #define SCREEN_HEIGHT 64  // OLED display height, in pixels
@@ -71,17 +71,14 @@ void RfidLcdSetup(void)
   //-----------initialize display-------------
 #ifdef USING_ST7735
   display.initR(INITR_BLACKTAB);  // Init ST7735S chip, black tab
-  display.setRotation(3);
+  display.setRotation(1);
 #else
-  SPI.begin();                                       // Init SPI bus
+//  SPI.begin();                                       // Init SPI bus
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {  // Address 0x3D for 128x64
     Serial.println(F("SSD1306 allocation failed"));
     for (;;)
       ;  // Don't proceed, loop forever
   }
-  // you can delet these three lines if you don't want to get the Adfruit logo appear
-  UPDATE_DISPLAY;
-  delay(2000);  // Pause for 2 seconds
   CLEAR_DISPLAY;
 #endif
 
@@ -128,10 +125,10 @@ void LcdDisplayConnecting(String ssid)
     display.setTextColor(TEXT_COLOR);  // Draw white text
     display.setCursor(0, 0);           // Start at top-left corner
     display.print(F("Connecting to \n"));
-    display.setCursor(0, 60);
+    display.setCursor(0, 68);
     display.setTextSize(2);
     display.print(ssid);
-    display.drawBitmap((SCREEN_WIDTH - Wifi_start_width) / 2, 10, Wifi_start_bits, Wifi_start_width, Wifi_start_height, TEXT_COLOR);
+    display.drawBitmap((SCREEN_WIDTH - Wifi_start_width) / 2, 14, Wifi_start_bits, Wifi_start_width, Wifi_start_height, TEXT_COLOR);
     UPDATE_DISPLAY;
 }
 void LcdDisplayConnected(IPAddress ip)

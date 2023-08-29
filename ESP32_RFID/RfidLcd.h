@@ -9,8 +9,8 @@
 #define USING_ST7735
 #define CONFIG_AP_SSID "rfid_config"
 
-#define BACKGROUND_COLOR WHITE
-#define TEXT_COLOR BLACK
+#define BACKGROUND_COLOR BLACK
+#define TEXT_COLOR WHITE
 
 
 
