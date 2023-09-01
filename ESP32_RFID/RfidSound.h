@@ -1,5 +1,5 @@
 
-#define BUZZZER_PIN  16 // ESP32 pin GPIO18 connected to piezo buzzer
+#include "HwConfig.h"
 
 /*************************************************
  * Public Constants

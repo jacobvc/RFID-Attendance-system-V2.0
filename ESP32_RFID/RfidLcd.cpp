@@ -1,4 +1,5 @@
 #include "RfidLcd.h"
+#ifndef NO_DISPLAY
 
 /*
  *
@@ -10,9 +11,6 @@
 #ifdef USING_ST7735
 // ST7735
 #include <Adafruit_ST7735.h>  //https://github.com/adafruit/Adafruit_ST7735
-#define TFT_CS 5
-#define TFT_RST 4  // Or set to -1 and connect to Arduino RESET pin
-#define TFT_DC 2
 
 #define SCREEN_WIDTH 160   // LED display width, in pixels
 #define SCREEN_HEIGHT 128  // LED display height, in pixels
@@ -30,8 +28,6 @@ extern Adafruit_ST7735 display;
 // SSD1306
 #include <Wire.h>
 #include <Adafruit_SSD1306.h>  //https://github.com/adafruit/Adafruit_SSD1306
-#define SS_PIN 5
-#define RST_PIN 4
 // Declaration for SSD1306 display connected using software I2C pins are(22 SCL, 21 SDA)
 #define SCREEN_WIDTH 128  // OLED display width, in pixels
 #define SCREEN_HEIGHT 64  // OLED display height, in pixels
@@ -60,7 +56,7 @@ const uint8_t PROGMEM Wifi_connected_bits[] = {
 
 //DISPLAY-----------------------------
 #ifdef USING_ST7735
-Adafruit_ST7735 display = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
+Adafruit_ST7735 display = Adafruit_ST7735(ST7735_CS_PIN, ST7735_DC_PIN, ST7735_RST_PIN);
 #else
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #endif
@@ -73,7 +69,7 @@ void RfidLcdSetup(void)
   display.initR(INITR_BLACKTAB);  // Init ST7735S chip, black tab
   display.setRotation(1);
 #else
-//  SPI.begin();                                       // Init SPI bus
+  SPI.begin();                                       // Init SPI bus REDUNDANT call is benign
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {  // Address 0x3D for 128x64
     Serial.println(F("SSD1306 allocation failed"));
     for (;;)
@@ -219,3 +215,4 @@ void LcdDisplayEndNotice()
   CLEAR_DISPLAY;
 }
 
+#endif

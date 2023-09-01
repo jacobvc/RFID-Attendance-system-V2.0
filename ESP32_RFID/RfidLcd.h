@@ -4,16 +4,26 @@
  *
  */
 
- #include <Arduino.h>
+#include <Arduino.h>
 
-#define USING_ST7735
-#define CONFIG_AP_SSID "rfid_config"
+#include "HwConfig.h"
 
-#define BACKGROUND_COLOR BLACK
-#define TEXT_COLOR WHITE
+#ifdef NO_DISPLAY
+#define RfidLcdSetup()
+#define RfidLcdTick()
 
+#define LcdDisplayTime()
+#define LcdDisplayEndNotice()
+#define LcdDisplayNotifyArrive(user_name)
+#define LcdDisplayNotifyDepart(user_name)
+#define LcdDisplayNotifyAvailable(message)
+#define LcdDisplayNotifySuccessful(message)
+#define LcdDisplayNotifyError(message)
 
-
+#define LcdDisplayConnecting(ssid)
+#define LcdDisplayConnected(ip)
+#define LcdDisplayApMode(ssid, ip)
+#else
 extern void RfidLcdSetup(void);
 extern void RfidLcdTick(void);
 
@@ -28,4 +38,4 @@ extern void LcdDisplayNotifyError(String message);
 extern void LcdDisplayConnecting(String ssid);
 extern void LcdDisplayConnected(IPAddress ip);
 extern void LcdDisplayApMode(String ssid, IPAddress ip);
-
+#endif

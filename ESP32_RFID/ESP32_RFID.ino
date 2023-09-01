@@ -7,6 +7,7 @@
   the RFID attendance project with ESP32.
    ---------------------------------------------------------------------------*/
 
+#include "HwConfig.h"
 #include "RfidLcd.h"
 #include "RfidSound.h"
 
@@ -15,11 +16,9 @@
 //RFID-----------------------------
 #include <SPI.h>
 #include <MFRC522.h>
-//************************************************************************
-#define SS_PIN 21
-#define RST_PIN 22
 
-MFRC522 rfid(SS_PIN, RST_PIN);  // Create MFRC522 instance.
+//************************************************************************
+MFRC522 rfid(RC522_CS_PIN, RC522_RST_PIN);  // Create MFRC522 instance.
 
 //************************************************************************
 int timezone = -5 * 3600;  //Replace "x" your timezone.
@@ -32,6 +31,7 @@ unsigned long previousMillis2 = 0;
 void setup() {
   Serial.begin(115200);
 
+  SPI.begin(); // Init SPI bus
   rfid.PCD_Init();  // Init MFRC522 card
   RfidLcdSetup();
 
@@ -60,12 +60,15 @@ void loop() {
 
   //---------------------------------------------
   //look for new card
-  if ( ! rfid.PICC_IsNewCardPresent())
+  if ( ! rfid.PICC_IsNewCardPresent()) {
+    //Serial.println("Not New");
     return;
-
-  // Verify if the NUID has been readed
-  if ( ! rfid.PICC_ReadCardSerial())
+  }
+  // Verify if the NUID has been read
+  if ( ! rfid.PICC_ReadCardSerial()) {
+    Serial.println("Read Fail");
     return;
+  }
   //if (rfid.PICC_IsNewCardPresent() && rfid.PICC_ReadCardSerial()) 
   {
     // New card, successfully read. The uid struct contians the ID of the new card.

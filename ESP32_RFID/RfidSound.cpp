@@ -2,6 +2,7 @@
 #include <arduino.h>
 
 #define COUNTOF(arr) (sizeof(arr) / sizeof(arr[0]))
+
 typedef struct {
   int note;
   int duration;
@@ -11,11 +12,11 @@ static void play(tune *notes, int count)
 {
  for (int thisNote = 0; thisNote < count; thisNote++) {
     int noteDuration = 1000 / notes[thisNote].duration;
-    tone(BUZZZER_PIN, notes[thisNote].note, noteDuration);
+    tone(AUDIO_PIN, notes[thisNote].note, noteDuration);
 
     int pauseBetweenNotes = noteDuration * 1.30;
     delay(pauseBetweenNotes);
-    noTone(BUZZZER_PIN);
+    noTone(AUDIO_PIN);
   }
 }
 

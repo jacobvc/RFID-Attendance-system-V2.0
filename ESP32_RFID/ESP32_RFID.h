@@ -6,6 +6,8 @@
 #include <WebServer.h>
 #include <ESPmDNS.h>
 
+#define CONFIG_AP_SSID "rfid_config"  // SSID to use in AP Mode
+
 /*
  *
  * Function Prototypes
