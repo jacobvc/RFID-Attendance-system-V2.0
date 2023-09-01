@@ -23,7 +23,7 @@
 
 #define CLEAR_DISPLAY display.fillScreen(BACKGROUND_COLOR)
 #define UPDATE_DISPLAY  // No update needed
-extern Adafruit_ST7735 display;
+Adafruit_ST7735 display = Adafruit_ST7735(ST7735_CS_PIN, ST7735_DC_PIN, ST7735_RST_PIN);
 #else
 // SSD1306
 #include <Wire.h>
@@ -36,7 +36,7 @@ extern Adafruit_ST7735 display;
 #define CLEAR_DISPLAY display.clearDisplay()
 #define UPDATE_DISPLAY display.display()
 
-extern Adafruit_SSD1306;
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #endif
 
 //************************* Biometric Icons *********************************
@@ -53,15 +53,6 @@ const uint8_t PROGMEM Wifi_connected_bits[] = {
 
 #define TIME_WIDTH 128
 
-
-//DISPLAY-----------------------------
-#ifdef USING_ST7735
-Adafruit_ST7735 display = Adafruit_ST7735(ST7735_CS_PIN, ST7735_DC_PIN, ST7735_RST_PIN);
-#else
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
-#endif
-
-
 void RfidLcdSetup(void)
 {
   //-----------initialize display-------------
@@ -69,7 +60,6 @@ void RfidLcdSetup(void)
   display.initR(INITR_BLACKTAB);  // Init ST7735S chip, black tab
   display.setRotation(1);
 #else
-  SPI.begin();                                       // Init SPI bus REDUNDANT call is benign
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {  // Address 0x3D for 128x64
     Serial.println(F("SSD1306 allocation failed"));
     for (;;)
