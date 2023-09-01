@@ -15,11 +15,14 @@
 #define SCREEN_WIDTH 160   // LED display width, in pixels
 #define SCREEN_HEIGHT 128  // LED display height, in pixels
 
-#define BLACK ST77XX_BLACK
-#define WHITE ST77XX_WHITE
-#define RED ST77XX_RED
-#define BLUE ST77XX_BLUE
-#define GREEN ST77XX_GREEN
+#define RGB565(r, g, b) ((((r) / 8) << 11) | (((g) / 4) << 5) | ((b) / 8))
+
+#define BLACK RGB565(0, 0, 0)
+#define WHITE RGB565(255, 255, 255)
+#define RED RGB565(255, 0, 0)
+#define BLUE RGB565(0, 0, 255)
+#define GREEN RGB565(0, 255, 0)
+#define ORANGE RGB565(255, 165, 0)
 
 #define CLEAR_DISPLAY display.fillScreen(BACKGROUND_COLOR)
 #define UPDATE_DISPLAY  // No update needed
@@ -65,9 +68,8 @@ void RfidLcdSetup(void)
     for (;;)
       ;  // Don't proceed, loop forever
   }
-  CLEAR_DISPLAY;
 #endif
-
+  CLEAR_DISPLAY;
 }
 
 void RfidLcdTick(void)
@@ -82,13 +84,13 @@ void LcdDisplayTime()
     struct tm *p_tm = localtime(&now);
     CLEAR_DISPLAY;
     display.setTextSize(1);            // Normal 2:2 pixel scale
-    display.setTextColor(TEXT_COLOR);  // Draw white text
+    display.setTextColor(TEXT_COLOR);  // Draw normal text
     display.setCursor(6, 3);
     display.print(p_tm);
     //display.print("    ");
     //Serial.println(p_tm);
     display.setTextSize(4);            // Normal 2:2 pixel scale
-    display.setTextColor(TEXT_COLOR);  // Draw white text
+    display.setTextColor(TEXT_COLOR);  // Draw normal text
     display.setCursor((SCREEN_WIDTH - TIME_WIDTH) / 2, 21);
     if ((p_tm->tm_hour) < 10) {
       display.print("0");
@@ -108,7 +110,7 @@ void LcdDisplayConnecting(String ssid)
 {
     CLEAR_DISPLAY;
     display.setTextSize(2);            // Normal 1:1 pixel scale
-    display.setTextColor(TEXT_COLOR);  // Draw white text
+    display.setTextColor(TEXT_COLOR);  // Draw normal text
     display.setCursor(0, 0);           // Start at top-left corner
     display.print(F("Connecting to \n"));
     display.setCursor(0, 68);
@@ -121,27 +123,44 @@ void LcdDisplayConnected(IPAddress ip)
 {
     CLEAR_DISPLAY;
     display.setTextSize(1);            // Normal 1:1 pixel scale
-    display.setTextColor(TEXT_COLOR);  // Draw white text
+    display.setTextColor(TEXT_COLOR);  // Draw normal text
     display.setCursor(0, 0);           // Start at top-left corner
     display.print(F("Connected "));
     display.print(ip);
     display.drawBitmap((SCREEN_WIDTH - Wifi_connected_width) / 2, 15, Wifi_connected_bits, Wifi_connected_width, Wifi_connected_height, TEXT_COLOR);
     UPDATE_DISPLAY;
 }
+
+static void PrintUserName(String name)
+{
+  char tmpName[80];
+  if (name.length() < sizeof(tmpName)) {
+    strcpy(tmpName, name.c_str());
+    const char *tzname = strtok(tmpName, ",");
+    if (tzname) {
+      display.print(tzname + strlen(tzname) + 1);
+      display.print("\n ");
+      display.print(tzname);
+      return;
+    }
+  }
+  display.print(name);
+}
+
 void LcdDisplayApMode(String ssid, IPAddress ip)
 {
     CLEAR_DISPLAY;
     display.setTextSize(2);
-    display.setTextColor(RED);  // Draw white text
-    display.setCursor(8, 3);           // Start at top-left corner
+    display.setTextColor(RED);  // Draw normal text
+    display.setCursor(25, 3);           // Start at top-left corner
     display.print(F("NO WiFi\n"));
-    display.setTextColor(TEXT_COLOR);  // Draw white text
+    display.setTextColor(TEXT_COLOR);  // Draw normal text
     display.print(F("\nConnect to AP\n "));
-    display.setTextColor(BLUE);  // Draw white text
+    display.setTextColor(BLUE);  // Draw ssid color text
     display.print(ssid);
-    display.setTextColor(TEXT_COLOR);  // Draw white text
+    display.setTextColor(TEXT_COLOR);  // Draw normal text
     display.print(F("\nAnd Browse to\n "));
-    display.setTextColor(BLUE);  // Draw white text
+    display.setTextColor(BLUE);  // Draw ip color text
     display.print(ip);
     UPDATE_DISPLAY;
 }
@@ -151,53 +170,55 @@ void LcdDisplayNotifyArrive(String user_name)
 {
   CLEAR_DISPLAY;
   display.setTextSize(2);            // Normal 2:2 pixel scale
-  display.setTextColor(TEXT_COLOR);  // Draw white text
+  display.setTextColor(GREEN);  // Draw normal text
   display.setCursor(15, 0);          // Start at top-left corner
-  display.print(F("Welcome"));
+  display.print(F("Arrive"));
+  display.setTextColor(TEXT_COLOR);  // Draw normal text
   display.setCursor(0, 20);
-  display.print(user_name);
+  PrintUserName(user_name);
   UPDATE_DISPLAY;
 }
 void LcdDisplayNotifyDepart(String user_name)
 {
   CLEAR_DISPLAY;
   display.setTextSize(2);            // Normal 2:2 pixel scale
-  display.setTextColor(TEXT_COLOR);  // Draw white text
+  display.setTextColor(ORANGE);  // Draw normal text
   display.setCursor(10, 0);          // Start at top-left corner
-  display.print(F("Good Bye"));
+  display.print(F("Depart"));
+  display.setTextColor(TEXT_COLOR);  // Draw normal text
   display.setCursor(0, 20);
-  display.print(user_name);
+  PrintUserName(user_name);
   UPDATE_DISPLAY;
 }
 
 void LcdDisplayNotifyAvailable(String message)
 {
-        CLEAR_DISPLAY;
-        display.setTextSize(2);            // Normal 2:2 pixel scale
-        display.setTextColor(TEXT_COLOR);  // Draw white text
-        display.setCursor(5, 0);           // Start at top-left corner
-        display.print(F("Free Card"));
-        UPDATE_DISPLAY;
+  CLEAR_DISPLAY;
+  display.setTextSize(2);            // Normal 2:2 pixel scale
+  display.setTextColor(TEXT_COLOR);  // Draw normal text
+  display.setCursor(5, 0);           // Start at top-left corner
+  display.print(F("Free Card"));
+  UPDATE_DISPLAY;
 }
 
 void LcdDisplayNotifySuccessful(String message)
 {
-        CLEAR_DISPLAY;
-        display.setTextSize(2);            // Normal 2:2 pixel scale
-        display.setTextColor(TEXT_COLOR);  // Draw white text
-        display.setCursor(5, 0);           // Start at top-left corner
-        display.print(F("New Card"));
-        UPDATE_DISPLAY;
+  CLEAR_DISPLAY;
+  display.setTextSize(2);            // Normal 2:2 pixel scale
+  display.setTextColor(TEXT_COLOR);  // Draw normal text
+  display.setCursor(5, 0);           // Start at top-left corner
+  display.print(F("New Card"));
+  UPDATE_DISPLAY;
 }
 
 void LcdDisplayNotifyError(String message)
 {
-        CLEAR_DISPLAY;
-        display.setTextSize(2);            // Normal 2:2 pixel scale
-        display.setTextColor(ST77XX_RED);  // Draw white text
-        display.setCursor(5, 0);           // Start at top-left corner
-        display.print(message);
-        UPDATE_DISPLAY;
+  CLEAR_DISPLAY;
+  display.setTextSize(2);            // Normal 2:2 pixel scale
+  display.setTextColor(ST77XX_RED);  // Draw error text
+  display.setCursor(5, 0);           // Start at top-left corner
+  display.print(message);
+  UPDATE_DISPLAY;
 }
 
 void LcdDisplayEndNotice() 
