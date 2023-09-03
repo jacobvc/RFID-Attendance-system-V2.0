@@ -12,6 +12,7 @@
 #define RfidLcdSetup()
 #define RfidLcdTick()
 
+#define LcdDisplayLaunch()
 #define LcdDisplayTime()
 #define LcdDisplayEndNotice()
 #define LcdDisplayNotifyArrive(user_name)
@@ -27,6 +28,7 @@
 extern void RfidLcdSetup(void);
 extern void RfidLcdTick(void);
 
+extern void LcdDisplayLaunch();
 extern void LcdDisplayTime();
 extern void LcdDisplayEndNotice();
 extern void LcdDisplayNotifyArrive(String user_name);

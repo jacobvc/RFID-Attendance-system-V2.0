@@ -29,6 +29,28 @@ static void handleNotFound();
 static void handleRoot();
 static void handleTimezoneJs();
 
+String GetTzName(String tz) {
+  char tmpTz[80];
+  strcpy(tmpTz, tz.c_str());
+  const char *tzname = strtok(tmpTz, ";");
+  if (!tzname) tzname = "";
+  return tzname;
+}
+String GetTzValue(String tz) {
+  char tmpTz[80];
+  strcpy(tmpTz, tz.c_str());
+  const char *tzname = strtok(tmpTz, ";");
+  const char *tzvalue = strtok(NULL, ";");
+  if (!tzvalue) return "";
+  else return tzvalue;
+}
+
+void SetTz(String value)
+{
+  if (GetTzValue(value).length() > 0) {
+    configTzTime(GetTzValue(value).c_str(), "pool.ntp.org", "time.nist.gov");
+  }
+}
 /*
  *
  * Implementation
@@ -47,6 +69,7 @@ void RfidWiFiSetup(void) {
   digitalWrite(led, 0);
 
   connectToWiFi(ssid.c_str(), password.c_str());
+  SetTz(tz);
 }
 
 void RfidWiFiTick(void) {
@@ -180,17 +203,23 @@ static void handleRoot() {
     String newSsid = server.arg("ssid");
     password = server.arg("pw");
     device_token = server.arg("device_token");
-    tz = server.arg("tz");
+    String tmpTz = server.arg("tz");
 
     Serial.println(" ssid: " + server.arg("ssid"));
     Serial.println(" pw: " + server.arg("pw"));
     Serial.println(" device_token: " + server.arg("device_token"));
     Serial.println(" url: " + server.arg("url"));
     Serial.println(" tz: " + server.arg("tz"));
+    Serial.println(" tz name: " + GetTzName(tmpTz));
+    Serial.println(" tz value: " + GetTzValue(tmpTz));
+    if (GetTzValue(tmpTz).length() > 0) {
+      SetTz(tmpTz);
+      tz = tmpTz;
+      preferences.putString("tz", tz);
+   }
 
     preferences.putString("device_token", device_token);
     preferences.putString("url", url);
-    preferences.putString("tz", tz);
 
     if (apmode) {
       // Check to try connect
@@ -299,8 +328,8 @@ static void handleRoot() {
       display: inline-block;
       width: 110px;
     }
-    select, input[type=text] {
-      width: 250px;
+    #tz,input[type=text] {
+      width: 300px;
     }
   </style>
   <script>

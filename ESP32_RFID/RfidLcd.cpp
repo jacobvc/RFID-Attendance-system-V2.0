@@ -77,19 +77,28 @@ void RfidLcdTick(void)
 
 }
 
+void LcdDisplayLaunch()
+{
+    display.setTextSize(3); 
+    display.setTextColor(GREEN);
+    display.setCursor(8, 50);
+    display.print("Starting");
+    UPDATE_DISPLAY;
+}
+
 // Time display
 void LcdDisplayTime()
 {
     time_t now = time(nullptr);
     struct tm *p_tm = localtime(&now);
     CLEAR_DISPLAY;
-    display.setTextSize(1);            // Normal 2:2 pixel scale
+    display.setTextSize(1);  
     display.setTextColor(TEXT_COLOR);  // Draw normal text
     display.setCursor(6, 3);
     display.print(p_tm);
     //display.print("    ");
     //Serial.println(p_tm);
-    display.setTextSize(4);            // Normal 2:2 pixel scale
+    display.setTextSize(4);  
     display.setTextColor(TEXT_COLOR);  // Draw normal text
     display.setCursor((SCREEN_WIDTH - TIME_WIDTH) / 2, 21);
     if ((p_tm->tm_hour) < 10) {
@@ -109,7 +118,7 @@ void LcdDisplayTime()
 void LcdDisplayConnecting(String ssid)
 {
     CLEAR_DISPLAY;
-    display.setTextSize(2);            // Normal 1:1 pixel scale
+    display.setTextSize(2); 
     display.setTextColor(TEXT_COLOR);  // Draw normal text
     display.setCursor(0, 0);           // Start at top-left corner
     display.print(F("Connecting to \n"));
@@ -122,7 +131,7 @@ void LcdDisplayConnecting(String ssid)
 void LcdDisplayConnected(IPAddress ip)
 {
     CLEAR_DISPLAY;
-    display.setTextSize(1);            // Normal 1:1 pixel scale
+    display.setTextSize(1);  
     display.setTextColor(TEXT_COLOR);  // Draw normal text
     display.setCursor(0, 0);           // Start at top-left corner
     display.print(F("Connected "));
@@ -169,7 +178,7 @@ void LcdDisplayApMode(String ssid, IPAddress ip)
 void LcdDisplayNotifyArrive(String user_name)
 {
   CLEAR_DISPLAY;
-  display.setTextSize(2);            // Normal 2:2 pixel scale
+  display.setTextSize(2);    
   display.setTextColor(GREEN);  // Draw normal text
   display.setCursor(15, 0);          // Start at top-left corner
   display.print(F("Arrive"));
@@ -181,7 +190,7 @@ void LcdDisplayNotifyArrive(String user_name)
 void LcdDisplayNotifyDepart(String user_name)
 {
   CLEAR_DISPLAY;
-  display.setTextSize(2);            // Normal 2:2 pixel scale
+  display.setTextSize(2); 
   display.setTextColor(ORANGE);  // Draw normal text
   display.setCursor(10, 0);          // Start at top-left corner
   display.print(F("Depart"));
@@ -194,7 +203,7 @@ void LcdDisplayNotifyDepart(String user_name)
 void LcdDisplayNotifyAvailable(String message)
 {
   CLEAR_DISPLAY;
-  display.setTextSize(2);            // Normal 2:2 pixel scale
+  display.setTextSize(2); 
   display.setTextColor(TEXT_COLOR);  // Draw normal text
   display.setCursor(5, 0);           // Start at top-left corner
   display.print(F("Available"));
@@ -204,7 +213,7 @@ void LcdDisplayNotifyAvailable(String message)
 void LcdDisplayNotifySuccessful(String message)
 {
   CLEAR_DISPLAY;
-  display.setTextSize(2);            // Normal 2:2 pixel scale
+  display.setTextSize(2); 
   display.setTextColor(TEXT_COLOR);  // Draw normal text
   display.setCursor(5, 0);           // Start at top-left corner
   display.print(F("Successful"));
@@ -214,7 +223,7 @@ void LcdDisplayNotifySuccessful(String message)
 void LcdDisplayNotifyError(String message)
 {
   CLEAR_DISPLAY;
-  display.setTextSize(2);            // Normal 2:2 pixel scale
+  display.setTextSize(2); 
   display.setTextColor(ST77XX_RED);  // Draw error text
   display.setCursor(5, 0);           // Start at top-left corner
   display.print(message);

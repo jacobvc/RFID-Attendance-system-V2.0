@@ -21,8 +21,6 @@
 MFRC522 rfid(RC522_CS_PIN, RC522_RST_PIN);  // Create MFRC522 instance.
 
 //************************************************************************
-int timezone = -5 * 3600;  //Replace "x" your timezone.
-int time_dst = 0;
 String OldCardID = "";
 unsigned long previousMillis1 = 0;
 unsigned long previousMillis2 = 0;
@@ -35,10 +33,10 @@ void setup() {
   rfid.PCD_Init();  // Init MFRC522 card
   RfidLcdSetup();
 
+  LcdDisplayLaunch();
   RfidSoundLaunch();
 
   RfidWiFiSetup();
-  configTime(timezone, time_dst, "pool.ntp.org", "time.nist.gov");
 }
 
 //************************************************************************
