@@ -74,8 +74,10 @@ void loop() {
     // New card, successfully read. The uid struct contians the ID of the new card.
     char buffer[32];
     // Format as 4 bytes in lower case hex 
-    sprintf(buffer, "%02x%02x%02x%02x", rfid.uid.uidByte[0],
-            rfid.uid.uidByte[1], rfid.uid.uidByte[2], rfid.uid.uidByte[3]);
+    sprintf(buffer, "%lu", rfid.uid.uidByte[0] << 24
+      | rfid.uid.uidByte[1] << 16 | rfid.uid.uidByte[2] << 8 | rfid.uid.uidByte[3]);
+//    sprintf(buffer, "%02x%02x%02x%02x", rfid.uid.uidByte[0],
+//            rfid.uid.uidByte[1], rfid.uid.uidByte[2], rfid.uid.uidByte[3]);
 
     String CardID = buffer;
 

@@ -198,7 +198,7 @@ if (isset($_GET['select'])) {
         echo "SQL_Error_Select";
         exit();
     }
-    else{
+    else{ 
         mysqli_stmt_bind_param($result, "s", $card_uid);
         mysqli_stmt_execute($result);
         $resultl = mysqli_stmt_get_result($result);

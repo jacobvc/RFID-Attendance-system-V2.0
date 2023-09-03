@@ -103,6 +103,7 @@ void SendCardID(String Card_uid) {
     }
   }
 }
+int scanCount = 0;
 void connectToWiFi(const char *ssid, const char *pw) {
   if (*ssid) {
     // Only try to connect if ssid is not blank
@@ -121,6 +122,9 @@ void connectToWiFi(const char *ssid, const char *pw) {
     }
   }
   if (WiFi.status() != WL_CONNECTED) {
+    if (scanCount > 0) WiFi.scanDelete();
+    scanCount = WiFi.scanNetworks();
+
     if (!WiFi.softAP(CONFIG_AP_SSID, "")) {
       Serial.println("Soft AP creation failed.");
       while (1)

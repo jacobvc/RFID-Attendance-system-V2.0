@@ -197,7 +197,7 @@ void LcdDisplayNotifyAvailable(String message)
   display.setTextSize(2);            // Normal 2:2 pixel scale
   display.setTextColor(TEXT_COLOR);  // Draw normal text
   display.setCursor(5, 0);           // Start at top-left corner
-  display.print(F("Free Card"));
+  display.print(F("Available"));
   UPDATE_DISPLAY;
 }
 
@@ -207,7 +207,7 @@ void LcdDisplayNotifySuccessful(String message)
   display.setTextSize(2);            // Normal 2:2 pixel scale
   display.setTextColor(TEXT_COLOR);  // Draw normal text
   display.setCursor(5, 0);           // Start at top-left corner
-  display.print(F("New Card"));
+  display.print(F("Successful"));
   UPDATE_DISPLAY;
 }
 
