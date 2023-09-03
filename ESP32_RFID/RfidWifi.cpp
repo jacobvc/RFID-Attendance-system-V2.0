@@ -103,8 +103,21 @@ void SendCardID(String Card_uid) {
     }
   }
 }
-int scanCount = 0;
+char scanList[200];
 void connectToWiFi(const char *ssid, const char *pw) {
+  int scanCount = WiFi.scanNetworks();
+  strcpy(scanList, "[");
+  for (int i = 0; i < scanCount; ++i) {
+    if (strlen( WiFi.SSID(i).c_str()) + strlen(scanList) < sizeof(scanList) - 1) {
+      strcat(scanList, "\"");
+      strcat(scanList,  WiFi.SSID(i).c_str());
+      strcat(scanList, "\",");
+    }
+  }
+  scanList[strlen(scanList) - 1] = ']';
+  Serial.println(scanList);
+  WiFi.scanDelete();
+
   if (*ssid) {
     // Only try to connect if ssid is not blank
     WiFi.mode(WIFI_OFF);  //Prevents reconnection issue (taking too long to connect)
@@ -122,9 +135,6 @@ void connectToWiFi(const char *ssid, const char *pw) {
     }
   }
   if (WiFi.status() != WL_CONNECTED) {
-    if (scanCount > 0) WiFi.scanDelete();
-    scanCount = WiFi.scanNetworks();
-
     if (!WiFi.softAP(CONFIG_AP_SSID, "")) {
       Serial.println("Soft AP creation failed.");
       while (1)
@@ -238,6 +248,8 @@ static void handleRoot() {
       Color: #000088;
     }
   </style>
+  <script>
+  </script>
 </head>
 <body>
   <h1>RFID Scanner Configuration</h1><br>
@@ -292,13 +304,36 @@ static void handleRoot() {
     }
   </style>
   <script>
+    function ssidInit()
+    {
+      var theList = document.getElementById('ssidList');  
+      var theinput = document.getElementById('ssid');  
+
+      var optList=%s;
+      optList.forEach(function (name) {
+        var option = document.createElement("option");
+        option.text = name;
+        option.value = name;
+        theList.add(option);
+      });
+    }
+
+    function combo(theList, theinput)
+    {
+      theinput = document.getElementById(theinput);  
+      var idx = theList.selectedIndex;
+      var content = theList.options[idx].innerHTML;
+      theinput.value = content;	
+    }
   </script>
 </head>
-<body onload="addtimezone('tz') "></body>
+<body onload="addtimezone('tz'); ssidInit() "></body>
   <h1>RFID Scanner Configuration</h1>
   <form method="POST">
     <label for="ssid">SSID</label>
-    <input type="text" id="ssid" name="ssid" value="%s"><br>
+    <input type="text" id="ssid" name="ssid" value="%s">
+      <select id="ssidList" onChange="combo(this, 'ssid');"></select>
+<br>
     <label for="pw">Password</label>
     <input type="text" id="pw" name="pw" value=""><br>
     <label for="tz">Timezone</label>
@@ -313,7 +348,7 @@ static void handleRoot() {
   </form>
 </body>
 </html>
-)", ssid.c_str(), tzname, device_token.c_str(), url.c_str());
+)",scanList,  ssid.c_str(), tzname, device_token.c_str(), url.c_str());
   server.send(200, "text/html", temp);
   digitalWrite(led, 0);
 }
