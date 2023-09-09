@@ -37,7 +37,7 @@ extern void LcdDisplayNotifyAvailable(String message);
 extern void LcdDisplayNotifySuccessful(String message);
 extern void LcdDisplayNotifyError(String message);
 
-extern void LcdDisplayConnecting(String ssid);
+extern void LcdDisplayConnecting(String ssid, bool graphic);
 extern void LcdDisplayConnected(IPAddress ip);
 extern void LcdDisplayApMode(String ssid, IPAddress ip);
 #endif

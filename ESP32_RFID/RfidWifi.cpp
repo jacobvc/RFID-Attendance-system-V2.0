@@ -149,11 +149,12 @@ void connectToWiFi(const char *ssid, const char *pw) {
     Serial.print("Connecting to ");
     Serial.println(ssid);
     WiFi.begin(ssid, pw);
-    LcdDisplayConnecting(ssid);
+    LcdDisplayConnecting(ssid, true);
 
     int retries = 30;
     while (WiFi.status() != WL_CONNECTED && retries-- > 0) {
       delay(500);
+      LcdDisplayConnecting(ssid, retries & 1);
       Serial.print(".");
     }
   }
