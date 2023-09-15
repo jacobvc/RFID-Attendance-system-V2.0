@@ -91,7 +91,7 @@ if (isset($_GET['card_uid']) && isset($_GET['device_token'])) {
                     }
                 }
                 else if ($row['add_card'] == 0){
-                    // Card is registered
+                    // Card is NOT registered
                     echo "Not registerd!";
                     exit();
                 }
