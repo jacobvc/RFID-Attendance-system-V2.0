@@ -25,6 +25,7 @@
 #define LcdDisplayConnected(ip)
 #define LcdDisplayApMode(ssid, ip)
 #else
+extern int backlight;
 extern void RfidLcdSetup(void);
 extern void RfidLcdTick(void);
 

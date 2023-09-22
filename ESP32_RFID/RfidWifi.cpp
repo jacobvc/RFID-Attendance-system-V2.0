@@ -12,6 +12,7 @@ String password;
 String device_token;
 String url;
 String tz;
+int backlight;
 
 const int led = 2;
 bool apmode = false;
@@ -64,6 +65,7 @@ void RfidWiFiSetup(void) {
   device_token = preferences.getString("device_token", "");
   url = preferences.getString("url", "");
   tz = preferences.getString("tz", "");
+  backlight = preferences.getInt("backlight", 180);
 
   pinMode(led, OUTPUT);
   digitalWrite(led, 0);
@@ -128,7 +130,8 @@ void SendCardID(String Card_uid) {
 }
 char scanList[200];
 void connectToWiFi(const char *ssid, const char *pw) {
-  int scanCount = WiFi.scanNetworks();
+  int scanCount = 0;
+  scanCount = WiFi.scanNetworks();
   strcpy(scanList, "[");
   for (int i = 0; i < scanCount; ++i) {
     if (strlen( WiFi.SSID(i).c_str()) + strlen(scanList) < sizeof(scanList) - 1) {
@@ -200,27 +203,38 @@ void connectToWiFi(const char *ssid, const char *pw) {
 
 static void handleRoot() {
   if (server.args() > 0) {
-    url = server.arg("url");
-    String newSsid = server.arg("ssid");
-    password = server.arg("pw");
-    device_token = server.arg("device_token");
-    String tmpTz = server.arg("tz");
+    String newSsid;
+    if (server.arg("backlight") != "") {
+      Serial.println("Backlight = " + server.arg("backlight"));
+      int val = atoi(server.arg("backlight").c_str());
+      if (val >= 50 && val < 256) {
+        backlight = val;
+        preferences.putInt("backlight", val);
+      }
+    }
+    else {
+      url = server.arg("url");
+      newSsid = server.arg("ssid");
+      password = server.arg("pw");
+      device_token = server.arg("device_token");
+      String tmpTz = server.arg("tz");
 
-    Serial.println(" ssid: " + server.arg("ssid"));
-    Serial.println(" pw: " + server.arg("pw"));
-    Serial.println(" device_token: " + server.arg("device_token"));
-    Serial.println(" url: " + server.arg("url"));
-    Serial.println(" tz: " + server.arg("tz"));
-    Serial.println(" tz name: " + GetTzName(tmpTz));
-    Serial.println(" tz value: " + GetTzValue(tmpTz));
-    if (GetTzValue(tmpTz).length() > 0) {
-      SetTz(tmpTz);
-      tz = tmpTz;
-      preferences.putString("tz", tz);
-   }
+      Serial.println(" ssid: " + server.arg("ssid"));
+      Serial.println(" pw: " + server.arg("pw"));
+      Serial.println(" device_token: " + server.arg("device_token"));
+      Serial.println(" url: " + server.arg("url"));
+      Serial.println(" tz: " + server.arg("tz"));
+      Serial.println(" tz name: " + GetTzName(tmpTz));
+      Serial.println(" tz value: " + GetTzValue(tmpTz));
+      if (GetTzValue(tmpTz).length() > 0) {
+        SetTz(tmpTz);
+        tz = tmpTz;
+        preferences.putString("tz", tz);
+      }
 
-    preferences.putString("device_token", device_token);
-    preferences.putString("url", url);
+      preferences.putString("device_token", device_token);
+      preferences.putString("url", url);
+    }
 
     if (apmode) {
       // Check to try connect
@@ -263,7 +277,7 @@ static void handleRoot() {
       }
     }
     else {
-      if (!ssid.equals(newSsid)) {
+      if (!newSsid.isEmpty() && !ssid.equals(newSsid)) {
         Serial.println("Trying access point " + newSsid);
         snprintf(temp, sizeof(temp),  R"(
 <html>
@@ -329,37 +343,60 @@ static void handleRoot() {
       display: inline-block;
       width: 110px;
     }
-    #tz,input[type=text] {
+    #tz,input[type=text],input[type=range] {
       width: 300px;
     }
   </style>
   <script>
     function ssidInit()
     {
-      var theList = document.getElementById('ssidList');  
+      var thelist = document.getElementById('ssidList');  
       var theinput = document.getElementById('ssid');  
 
       var optList=%s;
+
+      var option = document.createElement("option");
+      option.text = "-- select access point --";
+      option.value = "";
+      option.disabled = true;
+      option.selected = true;
+      option.hidden = true;
+      thelist.add(option);
+ 
       optList.forEach(function (name) {
-        var option = document.createElement("option");
+        option = document.createElement("option");
         option.text = name;
         option.value = name;
-        theList.add(option);
+        thelist.add(option);
       });
     }
 
-    function combo(theList, theinput)
+    function combo(thelist, theinput)
     {
       theinput = document.getElementById(theinput);  
-      var idx = theList.selectedIndex;
-      var content = theList.options[idx].innerHTML;
+      var idx = thelist.selectedIndex;
+      var content = thelist.options[idx].innerHTML;
       theinput.value = content;	
+    }
+    function backlightChanged(range)
+    {
+      document.getElementById('bl-form').submit();
     }
   </script>
 </head>
 <body onload="addtimezone('tz'); ssidInit() "></body>
   <h1>RFID Scanner Configuration</h1>
-  <form method="POST">
+)"
+#ifdef ADJUSTABLE_BACKLIGHT
+R"(  <form id="bl-form" method="POST">
+    <label for="backlight">Backlight</label>
+    <input type="range" min="50" max="255" value="%d" name="backlight" onchange='backlightChanged(this)'>
+  </form>
+)"
+#else
+R"(<div id='dummy-%d'></div>)"
+#endif
+R"(  <form method="POST">
     <label for="ssid">SSID</label>
     <input type="text" id="ssid" name="ssid" value="%s">
       <select id="ssidList" onChange="combo(this, 'ssid');"></select>
@@ -378,7 +415,7 @@ static void handleRoot() {
   </form>
 </body>
 </html>
-)",scanList,  ssid.c_str(), tzname, device_token.c_str(), url.c_str());
+)",scanList, backlight,  ssid.c_str(), tzname, device_token.c_str(), url.c_str());
   server.send(200, "text/html", temp);
   digitalWrite(led, 0);
 }

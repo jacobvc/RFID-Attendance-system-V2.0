@@ -1,4 +1,8 @@
 #include "RfidLcd.h"
+#include "driver/gpio.h"
+#include <SD.h>
+void sdLs();
+
 #ifndef NO_DISPLAY
 
 /*
@@ -26,6 +30,11 @@
 
 #define CLEAR_DISPLAY display.fillScreen(BACKGROUND_COLOR)
 #define UPDATE_DISPLAY  // No update needed
+
+const int ledChannel = 0;
+const int freq = 5000;
+const int resolution = 8;
+
 Adafruit_ST7735 display = Adafruit_ST7735(ST7735_CS_PIN, ST7735_DC_PIN, ST7735_RST_PIN);
 #else
 // SSD1306
@@ -145,6 +154,7 @@ const uint8_t PROGMEM Wifi_connected_bits[] = {
 };
 
 #define TIME_WIDTH 128
+bool firstTime = false;
 
 void RfidLcdSetup(void)
 {
@@ -152,6 +162,18 @@ void RfidLcdSetup(void)
 #ifdef USING_ST7735
   display.initR(INITR_BLACKTAB);  // Init ST7735S chip, black tab
   display.setRotation(1);
+#ifdef ST7735_LED_PIN
+    // Set backlight solid on. LEDC seems to stall during WiFi scan
+    // and connect
+    gpio_num_t pin = (gpio_num_t)ST7735_LED_PIN;
+    gpio_config_t io_conf;
+    io_conf.mode = GPIO_MODE_OUTPUT;       // set as output mode
+    io_conf.intr_type = GPIO_INTR_DISABLE; // disable interrupt
+    io_conf.pin_bit_mask = 1ull << pin; // bit mask of the pins, use GPIO4/5 here
+    gpio_config(&io_conf);
+    gpio_set_direction(pin, io_conf.mode);
+    gpio_set_level(pin, 1);
+#endif
 #else
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {  // Address 0x3D for 128x64
     Serial.println(F("SSD1306 allocation failed"));
@@ -160,11 +182,23 @@ void RfidLcdSetup(void)
   }
 #endif
   CLEAR_DISPLAY;
+
+#ifdef USE_SDCARD
+  SD.begin(16);
+#endif
 }
 
 void RfidLcdTick(void)
 {
-
+#if defined(USING_ST7735) && defined(ST7735_LED_PIN)
+  if (!firstTime) {
+    // Set up LEDC on first tick
+    ledcSetup(ledChannel, freq, resolution);
+    ledcAttachPin(ST7735_LED_PIN, ledChannel);
+    firstTime = true;
+  }
+  ledcWrite(ledChannel, backlight);
+#endif
 }
 
 void LcdDisplayLaunch()
@@ -326,6 +360,47 @@ void LcdDisplayNotifyError(String message)
 void LcdDisplayEndNotice() 
 {
   CLEAR_DISPLAY;
+#ifdef USE_SDCARD
+  // TEST - ls after sending RFID to server
+  sdLs();
+#endif
 }
+
+/*
+ * SD Card test code ls - print SD Card directory to serial output
+ */
+#ifdef USE_SDCARD
+void printDirectory(File dir, int numTabs) {
+  while (true) {
+
+    File entry =  dir.openNextFile();
+    if (! entry) {
+      // no more files
+      break;
+    }
+    for (uint8_t i = 0; i < numTabs; i++) {
+      Serial.print('\t');
+    }
+    Serial.print(entry.name());
+    if (entry.isDirectory()) {
+      Serial.println("/");
+      printDirectory(entry, numTabs + 1);
+    } else {
+      // files have sizes, directories do not
+      Serial.print("\t\t");
+      Serial.println(entry.size(), DEC);
+    }
+    entry.close();
+  }
+}
+
+void sdLs()
+{
+  int numTabs = 1;
+  File root = SD.open("/");
+
+  printDirectory(root, 0);
+}
+#endif
 
 #endif
