@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  *
  * Defines / Macros 
@@ -6,11 +8,11 @@
 
 #include <Arduino.h>
 
-#include "HwConfig.h"
+#include "configuration.h"
 
 #ifdef NO_DISPLAY
-#define RfidLcdSetup()
-#define RfidLcdTick()
+#define LcdSetup()
+#define LcdTick()
 
 #define LcdDisplayLaunch()
 #define LcdDisplayTime()
@@ -26,8 +28,8 @@
 #define LcdDisplayApMode(ssid, ip)
 #else
 extern int backlight;
-extern void RfidLcdSetup(void);
-extern void RfidLcdTick(void);
+extern void LcdSetup(void);
+extern void LcdTick(void);
 
 extern void LcdDisplayLaunch();
 extern void LcdDisplayTime();

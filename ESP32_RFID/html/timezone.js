@@ -1,5 +1,3 @@
-
-const char *timezone_js = R"(
 function addtimezone(id) {
   var opt = document.getElementById(id);
   Object.keys(timezones).forEach(function (key) {
@@ -473,4 +471,3 @@ timezones = {
   "Pacific/Wake": "<+12>-12",
   "Pacific/Wallis": "<+12>-12"
 }
-  )";

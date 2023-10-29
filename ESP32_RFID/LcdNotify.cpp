@@ -1,4 +1,4 @@
-#include "RfidLcd.h"
+#include "LcdNotify.h"
 #include "driver/gpio.h"
 #include <SD.h>
 void sdLs();
@@ -156,7 +156,7 @@ const uint8_t PROGMEM Wifi_connected_bits[] = {
 #define TIME_WIDTH 128
 bool firstTime = false;
 
-void RfidLcdSetup(void)
+void LcdSetup(void)
 {
   //-----------initialize display-------------
 #ifdef USING_ST7735
@@ -188,7 +188,7 @@ void RfidLcdSetup(void)
 #endif
 }
 
-void RfidLcdTick(void)
+void LcdTick(void)
 {
 #if defined(USING_ST7735) && defined(ST7735_LED_PIN)
   if (!firstTime) {

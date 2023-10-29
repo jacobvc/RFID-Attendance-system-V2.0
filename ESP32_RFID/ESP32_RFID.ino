@@ -1,24 +1,23 @@
-/* -----------------------------------------------------------------------------
-  - Project: RFID attendance system using ESP32
-  - Author:  https://www.youtube.com/ElectronicsTechHaIs
-  - Date:  6/03/2020
-   -----------------------------------------------------------------------------
-  This code was created by Electronics Tech channel for 
-  the RFID attendance project with ESP32.
-   ---------------------------------------------------------------------------*/
+#include "configuration.h"
 
-#include "HwConfig.h"
-#include "RfidLcd.h"
-#include "RfidSound.h"
+#include "RfidWifiServer.h"
 
-//*******************************libraries********************************
-#include "ESP32_RFID.h"
-//RFID-----------------------------
 #include <SPI.h>
 #include <MFRC522.h>
 
-//************************************************************************
+#include "RfidNotify.h"
+
+Preferences preferences;
+String device_token;
+int backlight;
+String url;
+
 MFRC522 rfid(RC522_CS_PIN, RC522_RST_PIN);  // Create MFRC522 instance.
+
+AudioNotify audio;
+RfidNotify notify(&audio);
+
+RfidWifiServer wifiServer(preferences, &notify, CONFIG_MDNS_NAME);
 
 //************************************************************************
 String OldCardID = "";
@@ -29,26 +28,32 @@ unsigned long previousMillis2 = 0;
 void setup() {
   Serial.begin(115200);
 
+  preferences.begin("rfid-scanner", false);
+  device_token = preferences.getString("device_token", "");
+  backlight = preferences.getInt("backlight", 180);
+  url = preferences.getString("url", "");
+
+  notify.begin();
+
   SPI.begin(); // Init SPI bus
   rfid.PCD_Init();  // Init MFRC522 card
-  RfidLcdSetup();
 
-  LcdDisplayLaunch();
-  RfidSoundLaunch();
+  notify.Launch();
 
-  RfidWiFiSetup();
+  wifiServer.begin();
 }
 
 //************************************************************************
 void loop() {
-  RfidWiFiTick();
-  RfidLcdTick();
-  if (RfidWiFiApMode()) return;
+  wifiServer.Tick();
+  notify.Tick();
+
+  if (wifiServer.ApMode()) return;
   //---------------------------------------------
   if (millis() - previousMillis1 >= 1000) {
     previousMillis1 = millis();
-    LcdDisplayTime();
-  }
+    notify.Time();
+ }
   //---------------------------------------------
   if (millis() - previousMillis2 >= 15000) {
     previousMillis2 = millis();
@@ -83,9 +88,24 @@ void loop() {
       OldCardID = CardID;
 
       //  Serial.println(CardID);
-      SendCardID(buffer);
+    //GET Data
+    String getData = "?card_uid=" + String(buffer) + "&device_token=" + String(device_token);  // Add the Card ID to the GET array in order to send it
+      String payload = wifiServer.get(getData);
+      if (payload.substring(0, 5) == "login") {
+        String user_name = payload.substring(5);
+        notify.Arrive(payload.substring(5));
+      } else if (payload.substring(0, 6) == "logout") {
+        notify.Depart(payload.substring(6));
+      } else if (payload == "succesful") {
+        notify.Successful(payload);
+      } else if (payload == "available") {
+        notify.Available(payload);
+      } else {
+        notify.Error(payload);
+      }
+
       delay(1000);
-      LcdDisplayEndNotice();
+      notify.EndNotice();
     }
   }
 }
